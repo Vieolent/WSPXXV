@@ -1,0 +1,16 @@
+h2 New rock 
+
+form action="/new" method="post"
+    input name="new_rock" placeholder="Name" type="text"
+    input name="image" type="text" placeholder="Image"
+    select name="rock_type" 
+        option value="Grianite" Grianite
+        option value="Shiny_rock" Shiny rock
+        option value="Tanzanite" Tanzanite
+        option value="Opal" Opal
+        option value="Granite" Granite
+    input type="text" name="description" placeholder="Description"
+    select name="publicness"
+        option value="false" Private 
+        option value="true" Public
+    input type="submit" value="Add"

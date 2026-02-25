@@ -1,0 +1,16 @@
+a href='/post_rock' Post new rock
+
+h2 Your rocks 
+hr
+- @personal_rocks.each do |rock|
+    p 
+        h3 #{rock["name"]}
+        //image goes here
+        h4 #{rock["rock_type"]}
+        p #{rock["description"]}
+    p
+        form action="/#{rock["id"]}/delete" method="post"
+            input type="submit" value="Remove"
+        form action="/#{rock["id"]}/edit" method="get"
+            input type="submit" value="Edit"
+        hr

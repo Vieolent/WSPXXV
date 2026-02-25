@@ -25,11 +25,12 @@ def create_tables(db)
               description TEXT,
               rock_type TEXT,
               owner_id INTEGER,
-              img TEXT)')
+              img TEXT,
+              publicness BOOL)')
 end
 
 def populate_tables(db)
-  db.execute('INSERT INTO rocks (name, description, rock_type, owner_id, img) VALUES ("test rock", "This is a test rock", "grianite", 1, "definetly an image")')
+  db.execute('INSERT INTO rocks (name, description, rock_type, owner_id, img, publicness) VALUES ("test rock", "This is a test rock", "Grianite", 1, "definetly an image", true)')
 end
 
 

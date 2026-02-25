@@ -1,0 +1,18 @@
+h2 Update your rocks 
+
+form action="/#{@selected_rock["id"]}/update" method="post"
+    input type="text" value='#{@selected_rock["name"]}' name="name"
+    select name="rock_type" 
+        option value="Grianite" Grianite
+        option value="Shiny_rock" Shiny rock
+        option value="Tanzanite" Tanzanite
+        option value="Opal" Opal
+        option value="Granite" Granite
+    input type="text" value='#{@selected_rock["description"]}' name="description"
+    input type="text" value='#{@selected_rock["img"]}' name="image"
+    select name="publicness"
+        option value="false" Private 
+        option value="true" Public
+    input type="submit" value="Update"
+
+
