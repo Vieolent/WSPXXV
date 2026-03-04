@@ -5,6 +5,8 @@ require 'sinatra/reloader'
 require 'bcrypt'
 require_relative './model.rb'
 
+enable :sessions
+
 
 get('/') do
   rocks = SQLite3::Database.new("db/rocks.db")
@@ -63,4 +65,66 @@ post("/:id/update") do
   publicness = params[:publicness]
   db.execute("UPDATE rocks SET name=?, description=?, rock_type=?, img=?, publicness=? WHERE id=?", [name, description, rock_type, image, publicness, id])
   redirect('/my_rocks')
+end
+
+post("/new_user") do
+  @wrong_password = false
+  username = params[:username]
+  geologstatus = params[:geologstatus]
+  password = params[:password]
+  confirm_password = params[:confirm_password]
+
+  users = SQLite3::Database.new("db/users.db")
+  result=users.execute("SELECT id FROM users WHERE username=?", username)
+
+  if result.empty?
+      if password==confirm_password
+          password_digest=BCrypt::Password.create(password)
+          users.execute("INSERT INTO users(username, password, adminstatus, geologstatus) VALUES(?,?, 0, ?)", [username, password_digest, geologstatus])
+          redirect('/')
+      else
+          @wrong_password = true
+          redirect('/register')
+      end
+  else
+      redirect('/') #fixa loginsida här sen
+  end
+end
+
+get('/register') do
+  slim(:register)
+end
+
+get('/login') do
+  slim(:login)
+end
+
+post('/login') do
+  @wrong_login = false
+  username = params["username"]
+  password = params["password"]
+
+
+  users = SQLite3::Database.new("db/users.db")
+  users.results_as_hash = true
+  result=users.execute("SELECT id, password FROM users WHERE username=?", username)
+
+  if result.empty?
+      @wrong_login = true
+      redirect('/login')
+  end
+
+  user_id = result.first["id"]
+  password_digest = result.first["password"]
+
+  p user_id
+  p password_digest
+
+  if BCrypt::Password.new(password_digest) == password
+      session[:user_id] = user_id
+      redirect('/')
+  else
+      @wrong_login = true 
+      redirect('/login')
+  end        
 end

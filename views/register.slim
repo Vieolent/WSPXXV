@@ -1,0 +1,15 @@
+h2 Registrera! 
+
+a href='/login' Logga in
+
+form action="/new_user" method="post"
+    input name="username" placeholder="username" type="text"
+    p Är du geolog?
+    input name="geologstatus" type="checkbox"
+    br
+    input type="password" name="password" placeholder="password"
+    input type="password" name="confirm_password" placeholder="password again"
+    input type="submit" value="Add"
+
+- if @wrong_password 
+    h6 Lösenorden matchar ej 

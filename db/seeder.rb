@@ -36,7 +36,38 @@ end
 
 seed!(rocks)
 
+users = SQLite3::Database.new("users.db")
 
 
+def seed2!(db)
+  puts "Using db file: db/todos.db"
+  puts "🧹 Dropping old tables..."
+  drop_tables2(db)
+  puts "🧱 Creating tables..."
+  create_tables2(db)
+  puts "🍎 Populating tables..."
+  populate_tables2(db)
+  puts "✅ Done seeding the database!"
+end
 
+def drop_tables2(db)
+  db.execute('DROP TABLE IF EXISTS users')
+  db.execute('DROP TABLE IF EXISTS rocks')
+end
+
+def create_tables2(db)
+  db.execute('CREATE TABLE users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              username TEXT NOT NULL, 
+              password TEXT NOT NULL,
+              adminstatus BOOL,
+              geologstatus BOOL)')
+end
+
+def populate_tables2(db)
+  #(db.execute('INSERT INTO rocks (name, password, adminstatus, geologstatus) VALUES ("Admin", "", "Grianite", 1, "definetly an image", true)')
+end
+
+
+seed2!(users)
 
