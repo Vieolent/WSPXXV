@@ -1,0 +1,8 @@
+h2 Public rocks
+hr
+- @public_rocks.each do |rock|
+    p 
+        h3 #{rock["name"]}
+        img src="img/#{rock["img"]}"
+        h4 #{rock["rock_type"]}
+        p #{rock["description"]}

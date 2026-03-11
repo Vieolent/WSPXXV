@@ -1,4 +1,5 @@
 require 'sqlite3'
+require 'bcrypt'
 
 rocks = SQLite3::Database.new("rocks.db")
 
@@ -26,11 +27,11 @@ def create_tables(db)
               rock_type TEXT,
               owner_id INTEGER,
               img TEXT,
-              publicness BOOL)')
+              publicness TEXT)')
 end
 
 def populate_tables(db)
-  db.execute('INSERT INTO rocks (name, description, rock_type, owner_id, img, publicness) VALUES ("test rock", "This is a test rock", "Grianite", 1, "definetly an image", true)')
+  db.execute('INSERT INTO rocks (name, description, rock_type, owner_id, img, publicness) VALUES ("test rock", "This is a test rock", "Grianite", 1, "definetly an image", "true")')
 end
 
 
@@ -60,12 +61,13 @@ def create_tables2(db)
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               username TEXT NOT NULL, 
               password TEXT NOT NULL,
-              adminstatus BOOL,
-              geologstatus BOOL)')
+              adminstatus TEXT,
+              geologstatus TEXT)')
 end
 
 def populate_tables2(db)
-  #(db.execute('INSERT INTO rocks (name, password, adminstatus, geologstatus) VALUES ("Admin", "", "Grianite", 1, "definetly an image", true)')
+  password = BCrypt::Password.create("12345")
+  db.execute('INSERT INTO users (username, password, adminstatus, geologstatus) VALUES ("Admin", ?, "true", "true")', [password])
 end
 
 

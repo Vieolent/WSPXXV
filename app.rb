@@ -21,7 +21,7 @@ end
 get('/my_rocks') do
   rocks = SQLite3::Database.new("db/rocks.db")
   rocks.results_as_hash = true
-  @personal_rocks = rocks.execute("SELECT * FROM rocks ORDER BY id DESC")
+  @personal_rocks = rocks.execute("SELECT * FROM rocks ORDER BY id DESC") #lägg till krav på inloggning
   slim(:my_rocks)
 end
 
@@ -111,6 +111,7 @@ post('/login') do
 
   if result.empty?
       @wrong_login = true
+
       redirect('/login')
   end
 
@@ -127,4 +128,11 @@ post('/login') do
       @wrong_login = true 
       redirect('/login')
   end        
+end
+
+get('/browse') do
+  rocks = SQLite3::Database.new("db/rocks.db")
+  rocks.results_as_hash = true
+  @public_rocks = rocks.execute("SELECT * FROM rocks WHERE publicness = 1 ORDER BY id DESC")
+  slim(:browse)
 end
