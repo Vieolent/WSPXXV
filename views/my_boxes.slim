@@ -1,0 +1,16 @@
+
+h2 Your boxes 
+hr
+- @personal_boxes.each do |box|
+    p 
+        h3 #{box["name"]}
+        p #{box["description"]}
+    hr
+        p
+        form action="/#{box["id"]}/box" method="get"
+            input type="submit" value="View"
+- #  p
+-#        form action="/#{rock["id"]}/delete" method="post"
+-#            input type="submit" value="Remove"
+-#        form action="/#{rock["id"]}/edit" method="get"
+-#            input type="submit" value="Edit"

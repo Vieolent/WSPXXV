@@ -6,7 +6,7 @@ require 'bcrypt'
 require_relative './model.rb'
 
 enable :sessions
-
+@adminness = false
 
 get('/') do
   rocks = SQLite3::Database.new("db/rocks.db")
@@ -19,9 +19,12 @@ get('/login') do
 end
 
 get('/my_rocks') do
+  if session[:user_id] == nil
+    redirect('/login')
+  end
   rocks = SQLite3::Database.new("db/rocks.db")
   rocks.results_as_hash = true
-  @personal_rocks = rocks.execute("SELECT * FROM rocks ORDER BY id DESC") #lägg till krav på inloggning
+  @personal_rocks = rocks.execute("SELECT * FROM rocks WHERE owner_id = ? ORDER BY id DESC", [session[:user_id]]) #lägg till krav på inloggning
   slim(:my_rocks)
 end
 
@@ -36,7 +39,7 @@ post('/new') do
   rock_type = params[:rock_type]
   publicness = params[:publicness]
   rocks = SQLite3::Database.new("db/rocks.db")  
-  rocks.execute("INSERT INTO rocks (name, description, rock_type, img, publicness) VALUES (?, ?, ?, ?, ?) ", [new_rock, description, rock_type, image, publicness])
+  rocks.execute("INSERT INTO rocks (name, description, rock_type, owner_id, img, publicness) VALUES (?, ?, ?, ?, ?, ?) ", [new_rock, description, rock_type, session[:user_id], image, publicness])
   redirect('/my_rocks')
 end
 
@@ -109,6 +112,7 @@ post('/login') do
   users.results_as_hash = true
   result=users.execute("SELECT id, password FROM users WHERE username=?", username)
 
+
   if result.empty?
       @wrong_login = true
 
@@ -118,21 +122,48 @@ post('/login') do
   user_id = result.first["id"]
   password_digest = result.first["password"]
 
-  p user_id
-  p password_digest
-
-  if BCrypt::Password.new(password_digest) == password
+    if BCrypt::Password.new(password_digest) == password
       session[:user_id] = user_id
       redirect('/')
   else
       @wrong_login = true 
       redirect('/login')
-  end        
+  end
+      
 end
 
 get('/browse') do
+  users = SQLite3::Database.new("db/users.db")
+  users.results_as_hash = true
   rocks = SQLite3::Database.new("db/rocks.db")
   rocks.results_as_hash = true
-  @public_rocks = rocks.execute("SELECT * FROM rocks WHERE publicness = 1 ORDER BY id DESC")
+  @public_rocks = rocks.execute("SELECT * FROM rocks WHERE publicness = 'true' ORDER BY id DESC")
+  if users.execute("SELECT adminstatus FROM users WHERE id = ?", session[:user_id]) == [{"adminstatus"=>"true"}]
+    @adminness = true
+  end 
   slim(:browse)
+end
+
+post('/logout') do
+  session.clear
+  redirect('/')
+end
+
+get('/my_boxes') do
+  if session[:user_id] == nil
+    redirect('/login')
+  end
+  boxes = SQLite3::Database.new("db/boxes.db")
+  boxes.results_as_hash = true
+  @personal_boxes = boxes.execute("SELECT * FROM boxes WHERE owner_id = ? ORDER BY id DESC", [session[:user_id]])
+  slim(:my_boxes)
+end
+
+get('/:id/box') do
+  id = params["id"]
+  boxes = SQLite3::Database.new("db/boxes.db")
+  boxes.results_as_hash = true
+  @boxinfo = boxes.execute("SELECT * FROM boxes WHERE id = ?", [id]).first
+  p @boxinfo
+  slim(:box)
 end

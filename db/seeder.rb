@@ -35,8 +35,6 @@ def populate_tables(db)
 end
 
 
-seed!(rocks)
-
 users = SQLite3::Database.new("users.db")
 
 
@@ -71,5 +69,38 @@ def populate_tables2(db)
 end
 
 
-seed2!(users)
 
+boxes = SQLite3::Database.new("boxes.db")
+
+
+def seed3!(db)
+  puts "Using db file: db/todos.db"
+  puts "🧹 Dropping old tables..."
+  drop_tables3(db)
+  puts "🧱 Creating tables..."
+  create_tables3(db)
+  puts "🍎 Populating tables..."
+  populate_tables3(db)
+  puts "✅ Done seeding the database!"
+end
+
+def drop_tables3(db)
+  db.execute('DROP TABLE IF EXISTS users')
+  db.execute('DROP TABLE IF EXISTS rocks')
+  db.execute('DROP TABLE IF EXISTS boxes')
+end
+
+def create_tables3(db)
+  db.execute('CREATE TABLE boxes (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL, 
+              description TEXT,
+              publicness TEXT,
+              owner_id INTEGER)')
+end
+
+def populate_tables3(db)
+  db.execute('INSERT INTO boxes (name, description, publicness, owner_id) VALUES ("Testbox", "This is the default box", "true", 1)')
+end
+
+seed3!(boxes)

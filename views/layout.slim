@@ -8,5 +8,19 @@ html lang="en"
   body 
 
     h1 Magpie 
+  
+  h3 Welcome to the geological capital of the internet
 
-    ==yield
+a href='/login' 
+    img src="img/irina-iacob-l9kaK0Hj12M-unsplash.jpg"
+a href='/browse'
+    img src="img/carole-smile-kHrrHMMG-ME-unsplash.jpg"
+a href='/my_rocks'
+    img src="img/carole-smile-O2X58S1t9QM-unsplash.jpg"
+a href='/my_boxes'
+    img src="img/renee-kiffin-ToDanUwG4vs-unsplash.jpg"
+br
+- if session[:user_id] != nil
+    form action="/logout" method="post"
+      input type="submit" value="Log out"
+==yield

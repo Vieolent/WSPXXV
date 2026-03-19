@@ -1,8 +1,16 @@
 h2 Public rocks
 hr
+
 - @public_rocks.each do |rock|
     p 
         h3 #{rock["name"]}
         img src="img/#{rock["img"]}"
         h4 #{rock["rock_type"]}
         p #{rock["description"]}
+    - if @adminness == true
+        p
+            form action="/#{rock["id"]}/delete" method="post"
+                input type="submit" value="Remove"
+            form action="/#{rock["id"]}/edit" method="get"
+                input type="submit" value="Edit"
+            hr
