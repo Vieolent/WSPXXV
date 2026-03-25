@@ -1,0 +1,15 @@
+h2 Select the rocks you want to add 
+
+form action="/add_rocks" method="post"
+    - @public_rocks.each do |rock|
+        p 
+            h3 #{rock["name"]}
+            img src="img/#{rock["img"]}"
+            h4 #{rock["rock_type"]}
+            p #{rock["description"]}
+            input name="rocks_selected_#{rock["id"]}" type="checkbox"
+        
+           
+    input type="submit" value="Add rocks"
+
+- #_#{rock["id"]}

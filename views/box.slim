@@ -1,2 +1,17 @@
 h2 #{@boxinfo["name"]}
 p #{@boxinfo["description"]}
+
+a href='/add_rock' Add rock to box
+
+- @internalrocks.each do |rock|
+    p 
+        h3 #{rock["name"]}
+        img src="img/#{rock["img"]}"
+        h4 #{rock["rock_type"]}
+        p #{rock["description"]}
+    p
+        form action="/#{rock["box_id"]}/#{rock["rock_id"]}/delete_from_box" method="post"
+            input type="submit" value="Remove"
+        form action="/#{rock["id"]}/edit" method="get"
+            input type="submit" value="Edit"
+        hr
