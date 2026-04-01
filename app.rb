@@ -9,8 +9,7 @@ enable :sessions
 @adminness = false
 
 get('/') do
-  rocks = SQLite3::Database.new("db/db.db")
-  rocks.results_as_hash = true
+  db = connect_db()
   slim(:index)
 end
 
@@ -22,9 +21,8 @@ get('/my_rocks') do
   if session[:user_id] == nil
     redirect('/login')
   end
-  rocks = SQLite3::Database.new("db/db.db")
-  rocks.results_as_hash = true
-  @personal_rocks = rocks.execute("SELECT * FROM rocks WHERE owner_id = ? ORDER BY id DESC", [session[:user_id]]) #lägg till krav på inloggning
+  db = connect_db()
+  @personal_rocks = personal_rockage(db, session[:user_id]) #lägg till krav på inloggning
   slim(:my_rocks)
 end
 
@@ -38,55 +36,60 @@ post('/new') do
   image = params[:image]
   rock_type = params[:rock_type]
   publicness = params[:publicness]
-  rocks = SQLite3::Database.new("db/db.db")  
-  rocks.execute("INSERT INTO rocks (name, description, rock_type, owner_id, img, publicness) VALUES (?, ?, ?, ?, ?, ?) ", [new_rock, description, rock_type, session[:user_id], image, publicness])
+  db = connect_db() 
+  new_shiny_rock(db, new_rock, description, rock_type, session[:user_id], image, publicness)
   redirect('/my_rocks')
 end
 
 post("/:id/delete") do
-  rocks = SQLite3::Database.new("db/db.db")
+  db = connect_db()
   removing = params[:id].to_i
-  rocks.execute("DELETE FROM rocks WHERE id = ?", removing)
+  delete_rock(db, removing)
   redirect('/my_rocks')
 end
 
 get("/:id/edit") do
   id = params[:id].to_i
-  db = SQLite3::Database.new("db/db.db")
-  db.results_as_hash = true
-  @selected_rock = db.execute("SELECT * FROM rocks WHERE id=?", id).first
+  db = connect_db()
+  @selected_rock = select_rock(db, id)
   slim(:"/edit")
 end
 
 post("/:id/update") do
-  db = SQLite3::Database.new("db/db.db")  
+  db = connect_db()
   id = params[:id].to_i
   name = params[:name]
   description = params[:description]
   image = params[:image]
   rock_type = params[:rock_type]
   publicness = params[:publicness]
-  db.execute("UPDATE rocks SET name=?, description=?, rock_type=?, img=?, publicness=? WHERE id=?", [name, description, rock_type, image, publicness, id])
+  update_rock(db, name, description, rock_type, image, publicness, id)
   redirect('/my_rocks')
 end
 
 post("/new_user") do
-  @wrong_password = false
+  session[:wrong_password] = false
+  session[:bad_password] = false
   username = params[:username]
   geologstatus = params[:geologstatus]
   password = params[:password]
   confirm_password = params[:confirm_password]
 
-  users = SQLite3::Database.new("db/db.db")
-  result=users.execute("SELECT id FROM users WHERE username=?", username)
+  if password.length < 5 || password.length > 25
+    session[:bad_password] = true
+    redirect('/register')
+  end
+
+  db = connect_db()
+  result = select_user(db, username)
 
   if result.empty?
-      if password==confirm_password
-          password_digest=BCrypt::Password.create(password)
-          users.execute("INSERT INTO users(username, password, adminstatus, geologstatus) VALUES(?,?, 0, ?)", [username, password_digest, geologstatus])
+      if password == confirm_password
+          password_digest = BCrypt::Password.create(password)
+          add_user(db, username, password_digest, geologstatus)
           redirect('/')
       else
-          @wrong_password = true
+          session[:wrong_password] = true
           redirect('/register')
       end
   else
@@ -108,9 +111,8 @@ post('/login') do
   password = params["password"]
 
 
-  users = SQLite3::Database.new("db/db.db")
-  users.results_as_hash = true
-  result=users.execute("SELECT id, password FROM users WHERE username=?", username)
+  db = connect_db()
+  result = select_password_of_user(db, username)
 
 
   if result.empty?
@@ -133,10 +135,9 @@ post('/login') do
 end
 
 get('/browse') do
-  db = SQLite3::Database.new("db/db.db")
-  db.results_as_hash = true
-  @public_rocks = db.execute("SELECT * FROM rocks WHERE publicness = 'true' ORDER BY id DESC")
-  if db.execute("SELECT adminstatus FROM users WHERE id = ?", session[:user_id]) == [{"adminstatus"=>"true"}]
+  db = connect_db()
+  @public_rocks = select_public_rocks(db)
+  if find_adminness(db, session[:user_id]) == [{"adminstatus"=>"true"}]
     @adminness = true
   end 
   slim(:browse)
@@ -151,36 +152,32 @@ get('/my_boxes') do
   if session[:user_id] == nil
     redirect('/login')
   end
-  boxes = SQLite3::Database.new("db/db.db")
-  boxes.results_as_hash = true
-  @personal_boxes = boxes.execute("SELECT * FROM boxes WHERE owner_id = ? ORDER BY id DESC", [session[:user_id]])
+  db = connect_db()
+  @personal_boxes = select_personal_boxes(db, session[:user_id])
   slim(:my_boxes)
 end
 
 get('/:id/box') do
   id = params["id"]
   session[:box_id] = id
-  db = SQLite3::Database.new("db/db.db")
-  db.results_as_hash = true
-  @boxinfo = db.execute("SELECT * FROM boxes WHERE id = ?", [id]).first
-  @internalrocks = db.execute("SELECT * FROM rel_box_rocks INNER JOIN rocks ON rel_box_rocks.rock_id = rocks.id WHERE box_id = ? AND owner_id = ?", [id, session[:user_id]])
-  p @internalrocks
+  db = connect_db()
+  @boxinfo = find_boxinfo(db, id)
+  @internalrocks = find_internal_rocks(db, id, session[:user_id])
   slim(:box)
 end
 
 post("/:box_id/:rock_id/delete_from_box") do
-  db = SQLite3::Database.new("db/db.db")
+  db = connect_db()
   removing = params[:box_id].to_i
   removingage = params[:rock_id].to_i
-  db.execute("DELETE FROM rel_box_rocks WHERE rock_id = ? AND box_id = ?",[removingage, removing])
+  delete_from_boxes(db, removingage, removing)
   redirect('/my_rocks')
 end
 
 get("/:id/edit") do
   id = params[:id].to_i
-  db = SQLite3::Database.new("db/db.db")
-  db.results_as_hash = true
-  @selected_rock = db.execute("SELECT * FROM rocks WHERE id=?", id).first
+  db = connect_db()
+  @selected_rock = select_rock(db, id)
   slim(:"/edit")
 end
 
@@ -192,20 +189,24 @@ post('/new_box') do
   new_box = params[:new_box]
   description = params[:description]
   publicness = params[:publicness]
-  db = SQLite3::Database.new("db/db.db")  
-  db.execute("INSERT INTO boxes (name, description, owner_id, publicness) VALUES ( ?, ?, ?, ?) ", [new_box, description, session[:user_id], publicness])
+  db = connect_db()
+  create_new_box(db, new_box, description, session[:user_id], publicness)
   redirect('/my_boxes')
 end
 
 get('/add_rock') do
-  db = SQLite3::Database.new("db/db.db")
-  db.results_as_hash = true
-  @public_rocks = db.execute("SELECT * FROM rocks WHERE publicness = 'true' OR owner_id= ? ORDER BY id DESC", [session[:user_id]])
+  db = connect_db()
+  @public_rocks = select_public_or_owned_rocks(db, session[:user_id])
   slim(:add_rock)
 end
 
 post('/add_rocks') do
-  added_rocks = params[:rocks_selected]
+  i = 0
+  while i < @public_rocks.length 
+    if params["rocks_selected_#{i}"]
+    end
+  end
+  added_rocks = params[:rocks_selected_1]
   p added_rocks
 
   redirect('/my_boxes')

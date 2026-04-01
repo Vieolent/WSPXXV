@@ -11,5 +11,8 @@ form action="/new_user" method="post"
     input type="password" name="confirm_password" placeholder="password again"
     input type="submit" value="Add"
 
-- if @wrong_password 
-    h6 Lösenorden matchar ej 
+- if session[:wrong_password]
+    h5 Lösenorden matchar ej 
+
+- if session[:bad_password]
+    h5 Lösenordet är av en invalid längd
