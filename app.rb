@@ -3,6 +3,7 @@ require 'slim'
 require 'sqlite3'
 require 'sinatra/reloader'
 require 'bcrypt'
+
 require_relative './model.rb'
 
 enable :sessions
@@ -22,7 +23,7 @@ get('/my_rocks') do
     redirect('/login')
   end
   db = connect_db()
-  @personal_rocks = personal_rockage(db, session[:user_id]) #lägg till krav på inloggning
+  @personal_rocks = personal_rockage(db, session[:user_id]) 
   slim(:my_rocks)
 end
 
@@ -93,7 +94,7 @@ post("/new_user") do
           redirect('/register')
       end
   else
-      redirect('/') #fixa loginsida här sen
+      redirect('/') 
   end
 end
 
