@@ -1,4 +1,4 @@
-a href='/post_rock' Post new rock
+a href='/rocks/new' Post new rock
 
 h2 Your rocks 
 hr
@@ -11,6 +11,6 @@ hr
     p
         form action="/#{rock["id"]}/delete" method="post"
             input type="submit" value="Remove"
-        form action="/#{rock["id"]}/edit" method="get"
+        form action="/rocks/#{rock["id"]}/edit" method="get"
             input type="submit" value="Edit"
         hr

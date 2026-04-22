@@ -9,26 +9,31 @@ require_relative './model.rb'
 enable :sessions
 @adminness = false
 
+before('/protected/*') do
+   if session[:user_id] ==  nil
+    #Ingen användare är inloggad
+    redirect('/users/login')
+  end
+ end
+ 
+
 get('/') do
   db = connect_db()
-  slim(:index)
+  slim(:start)
 end
 
-get('/login') do
-  slim(:login)
+get('/users/login') do
+  slim(:"users/login")
 end
 
-get('/my_rocks') do
-  if session[:user_id] == nil
-    redirect('/login')
-  end
+get('/protected/rocks/private_index') do
   db = connect_db()
   @personal_rocks = personal_rockage(db, session[:user_id]) 
-  slim(:my_rocks)
+  slim(:"rocks/private_index")
 end
 
-get('/post_rock') do
-  slim(:post_rock)
+get('/rocks/new') do
+  slim(:"rocks/new")
 end
 
 post('/new') do
@@ -39,21 +44,29 @@ post('/new') do
   publicness = params[:publicness]
   db = connect_db() 
   new_shiny_rock(db, new_rock, description, rock_type, session[:user_id], image, publicness)
-  redirect('/my_rocks')
+  redirect('/protected/rocks/private_index')
 end
 
 post("/:id/delete") do
+  removing = params[:id]
   db = connect_db()
-  removing = params[:id].to_i
-  delete_rock(db, removing)
-  redirect('/my_rocks')
+  if find_adminness(db, session[:user_id]).first["adminstatus"] == "true" || session[:user_id].to_i == select_id_of_rock_owner(db, removing).first["owner_id"].to_i
+    delete_rock(db, removing)
+    redirect('/protected/rocks/private_index')
+  else
+    redirect('/')
+  end
 end
 
-get("/:id/edit") do
+get("/rocks/:id/edit") do
   id = params[:id].to_i
   db = connect_db()
-  @selected_rock = select_rock(db, id)
-  slim(:"/edit")
+  if find_adminness(db, session[:user_id]).first["adminstatus"] == "true" || session[:user_id].to_i == select_id_of_rock_owner(db, id).first["owner_id"].to_i
+    @selected_rock = select_rock(db, id)
+    slim(:"rocks/edit")
+  else
+    slim(:start)
+  end
 end
 
 post("/:id/update") do
@@ -65,7 +78,7 @@ post("/:id/update") do
   rock_type = params[:rock_type]
   publicness = params[:publicness]
   update_rock(db, name, description, rock_type, image, publicness, id)
-  redirect('/my_rocks')
+  redirect('/protected/rocks/private_index')
 end
 
 post("/new_user") do
@@ -78,7 +91,7 @@ post("/new_user") do
 
   if password.length < 5 || password.length > 25
     session[:bad_password] = true
-    redirect('/register')
+    redirect('users/register')
   end
 
   db = connect_db()
@@ -91,19 +104,19 @@ post("/new_user") do
           redirect('/')
       else
           session[:wrong_password] = true
-          redirect('/register')
+          redirect('users/register')
       end
   else
       redirect('/') 
   end
 end
 
-get('/register') do
-  slim(:register)
+get('/users/register') do
+  slim(:"users/register")
 end
 
-get('/login') do
-  slim(:login)
+get('/users/login') do
+  slim(:"users/login")
 end
 
 post('/login') do
@@ -119,7 +132,7 @@ post('/login') do
   if result.empty?
       @wrong_login = true
 
-      redirect('/login')
+      redirect('/users/login')
   end
 
   user_id = result.first["id"]
@@ -130,18 +143,18 @@ post('/login') do
       redirect('/')
   else
       @wrong_login = true 
-      redirect('/login')
+      redirect('/users/login')
   end
       
 end
 
-get('/browse') do
+get('/rocks/public_index') do
   db = connect_db()
   @public_rocks = select_public_rocks(db)
   if find_adminness(db, session[:user_id]) == [{"adminstatus"=>"true"}]
     @adminness = true
   end 
-  slim(:browse)
+  slim(:"rocks/public_index")
 end
 
 post('/logout') do
@@ -149,41 +162,31 @@ post('/logout') do
   redirect('/')
 end
 
-get('/my_boxes') do
-  if session[:user_id] == nil
-    redirect('/login')
-  end
+get('/protected/boxes/index') do
   db = connect_db()
   @personal_boxes = select_personal_boxes(db, session[:user_id])
-  slim(:my_boxes)
+  slim(:"boxes/index")
 end
 
-get('/:id/box') do
+get('/boxes/new') do
+  slim(:"boxes/new")
+end
+
+get('/boxes/:id') do
   id = params["id"]
   session[:box_id] = id
   db = connect_db()
   @boxinfo = find_boxinfo(db, id)
   @internalrocks = find_internal_rocks(db, id, session[:user_id])
-  slim(:box)
+  slim(:"boxes/show")
 end
 
-post("/:box_id/:rock_id/delete_from_box") do
+post("/boxes/:box_id/:rock_id/delete_from_box") do
   db = connect_db()
   removing = params[:box_id].to_i
   removingage = params[:rock_id].to_i
   delete_from_boxes(db, removingage, removing)
-  redirect('/my_rocks')
-end
-
-get("/:id/edit") do
-  id = params[:id].to_i
-  db = connect_db()
-  @selected_rock = select_rock(db, id)
-  slim(:"/edit")
-end
-
-get('/post_box') do
-  slim(:post_box)
+  redirect('/protected/boxes/index')
 end
 
 post('/new_box') do
@@ -192,13 +195,13 @@ post('/new_box') do
   publicness = params[:publicness]
   db = connect_db()
   create_new_box(db, new_box, description, session[:user_id], publicness)
-  redirect('/my_boxes')
+  redirect('/protected/boxes/index')
 end
 
-get('/add_rock') do
+get('/boxes/add_rock') do
   db = connect_db()
   @public_rocks = select_public_or_owned_rocks(db, session[:user_id])
-  slim(:add_rock)
+  slim(:"rocks/add_rock")
 end
 
 post('/add_rocks') do
@@ -210,5 +213,5 @@ post('/add_rocks') do
   added_rocks = params[:rocks_selected_1]
   p added_rocks
 
-  redirect('/my_boxes')
+  redirect('/protected/boxes/index')
 end

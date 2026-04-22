@@ -1,7 +1,7 @@
 
 h2 Your boxes 
 
-a href='/post_box' Post new box
+a href='/boxes/new' Post new box
 hr
 - @personal_boxes.each do |box|
     p 
@@ -9,7 +9,7 @@ hr
         p #{box["description"]}
     hr
         p
-        form action="/#{box["id"]}/box" method="get"
+        form action="/boxes/#{box["id"]}" method="get"
             input type="submit" value="View"
 - #  p
 -#        form action="/#{rock["id"]}/delete" method="post"

@@ -68,3 +68,7 @@ end
 def select_public_or_owned_rocks(db, user_id)
   return db.execute("SELECT * FROM rocks WHERE publicness = 'true' OR owner_id= ? ORDER BY id DESC", [user_id])
 end
+
+def select_id_of_rock_owner(db, rock_id)
+  return db.execute("SELECT owner_id FROM rocks WHERE id = ?", rock_id)
+end
