@@ -172,9 +172,16 @@ get('/boxes/new') do
   slim(:"boxes/new")
 end
 
+get('/boxes/add_rock') do
+  db = connect_db()
+  @public_rocks = select_public_or_owned_rocks(db, session[:user_id])
+  slim(:"boxes/add_rock")
+end
+
 get('/boxes/:id') do
   id = params["id"]
   session[:box_id] = id
+  p session[:box_id]
   db = connect_db()
   @boxinfo = find_boxinfo(db, id)
   @internalrocks = find_internal_rocks(db, id, session[:user_id])
@@ -198,20 +205,22 @@ post('/new_box') do
   redirect('/protected/boxes/index')
 end
 
-get('/boxes/add_rock') do
-  db = connect_db()
-  @public_rocks = select_public_or_owned_rocks(db, session[:user_id])
-  slim(:"rocks/add_rock")
-end
+
 
 post('/add_rocks') do
-  i = 0
-  while i < @public_rocks.length 
-    if params["rocks_selected_#{i}"]
-    end
+  db = connect_db()
+
+  box_id = params[:box_id]   # if you send box_id in form
+  p session[:box_id]
+  p session[:box_id].to_i
+
+  params.each do |key, value|
+      if key.start_with?("rocks_selected_")
+          rock_id = key.split("_").last
+
+          db.execute("INSERT INTO rel_box_rocks (rock_id, box_id) VALUES (?, ?)",[rock_id, session[:box_id]])
+      end
   end
-  added_rocks = params[:rocks_selected_1]
-  p added_rocks
 
   redirect('/protected/boxes/index')
 end

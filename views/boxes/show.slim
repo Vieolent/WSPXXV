@@ -1,9 +1,7 @@
-- p "on the show page for some reason"
-
 h2 #{@boxinfo["name"]}
 p #{@boxinfo["description"]}
 
-a href='/add_rock' Add rock to box
+a href='/boxes/add_rock' Add rock to box
 
 - @internalrocks.each do |rock|
     p 
@@ -12,6 +10,6 @@ a href='/add_rock' Add rock to box
         h4 #{rock["rock_type"]}
         p #{rock["description"]}
     p
-        form action="/#{rock["box_id"]}/#{rock["rock_id"]}/delete_from_box" method="post"
+        form action="/boxes/#{rock["box_id"]}/#{rock["rock_id"]}/delete_from_box" method="post"
             input type="submit" value="Remove"
         hr
